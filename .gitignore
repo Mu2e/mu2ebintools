@@ -1,0 +1,10 @@
+*~
+*.o
+*.a
+*.so
+*.d
+*.log
+*.pdf
+*.root
+*.ROOTCHECK
+fhicl-getpar
