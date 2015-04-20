@@ -18,6 +18,13 @@ std::string usage() {
 }
 
 int main(int argc, const char* argv[]){
+  if( (argc > 1) &&
+      ((argv[1] == std::string("-h")) ||
+       (argv[1] == std::string("--help"))) ) {
+    std::cout<<usage();
+    exit(0);
+  }
+
   try {
     // Check and parse arguments.
     if ( argc != 4 ){
