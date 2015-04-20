@@ -1,0 +1,25 @@
+# The parent line must be the first non-comment line in the file
+# This line defines the product name and version
+parent mu2ebintools  v1_00_00
+defaultqual	e7
+#
+fcldir	-
+#
+product		version
+fhiclcpp	v3_03_00
+cetbuildtools	v4_07_03	-	only_for_build
+end_product_list
+
+ 
+# Matrix of qualifiers versus dependent products
+qualifier	fhiclcpp	compiler	notes
+e7:debug	e7:debug	gcc	
+e7:opt		e7:opt		gcc	
+e7:prof		e7:prof		gcc	
+end_qualifier_list
+
+# Local Variables:
+# tab-width: 8
+# End:
+
+# vi:set ts=8 noexpandtab:
