@@ -1,0 +1,16 @@
+To build and prepare a UPS package tarball:
+
+
+mkdir /some/path/build /some/path/install
+cd /some/path/build
+source /path/to/mu2ebintools/ups/setup_for_development <-p|-d> [qual]
+
+# Edit the last line of the printout to have the correct install
+# path, and run the command, like
+
+env CC=gcc CXX=g++ FC=gfortran cmake -DCMAKE_INSTALL_PREFIX=/mu2e/app/users/gandr/install  -DCMAKE_BUILD_TYPE=${CETPKG_TYPE} "${CETPKG_SOURCE}"
+
+make
+make install
+make package
+
