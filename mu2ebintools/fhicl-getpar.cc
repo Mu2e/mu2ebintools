@@ -60,7 +60,7 @@ int main(int argc, const char* argv[]){
 
     } else if(opt == "--keys") {
       const fhicl::ParameterSet nps(pset.get<fhicl::ParameterSet>(parname));
-      const strlist res(nps.get_keys());
+      const strlist res(nps.get_names());
       for(const auto& a: res) {
         std::cout<<a<<std::endl;
       }
