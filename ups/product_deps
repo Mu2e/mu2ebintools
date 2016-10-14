@@ -5,16 +5,16 @@ parent mu2ebintools  v1_01_03
 fcldir	-
 #
 product		version
-fhiclcpp	v3_12_09
-cetbuildtools	v4_16_00	-	only_for_build
+fhiclcpp	v4_01_00
+cetbuildtools	v5_04_03	-	only_for_build
 end_product_list
 
  
 # Matrix of qualifiers versus dependent products
 qualifier	fhiclcpp	compiler	notes
-e9:debug	e9:debug	gcc
-e9:opt		e9:opt		gcc
-e9:prof		e9:prof		gcc
+e10:debug	e10:debug	gcc
+e10:opt		e10:opt		gcc
+e10:prof 	e10:prof	gcc
 end_qualifier_list
 
 # Local Variables:
