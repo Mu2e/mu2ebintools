@@ -14,3 +14,21 @@ make
 make install
 make package
 
+The tarball will be in the build directory.
+Then simply untar it on CVMFS:
+
+ssh cvmfsmu2e@oasiscfs.fnal.gov
+source /cvmfs/fermilab.opensciencegrid.org/products/common/etc/setups
+setup mu2e
+
+cvmfs_server transaction mu2e.opensciencegrid.org
+cd /cvmfs/mu2e.opensciencegrid.org/artexternals
+
+ups list -aK+ mu2ebintools
+
+tar xvf /grid/fermiapp/mu2e/users/gandr/dev/build.prof/mu2ebintools-1.01.05-slf6-x86_64-e10-prof.tar.bz2
+
+ups list -aK+ mu2ebintools
+
+cd
+cvmfs_server publish mu2e.opensciencegrid.org
