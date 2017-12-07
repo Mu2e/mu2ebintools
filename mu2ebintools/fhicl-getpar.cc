@@ -36,7 +36,7 @@ int main(int argc, const char* argv[]){
     const std::string infile(argv[3]);
 
     // Read input file to make a parameter set.
-    cet::filepath_lookup policy("FHICL_FILE_PATH");
+    cet::filepath_lookup_after1 policy("FHICL_FILE_PATH");
 
     fhicl::intermediate_table tbl;
     fhicl::parse_document(infile, policy, tbl);
