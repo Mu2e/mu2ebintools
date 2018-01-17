@@ -1,12 +1,12 @@
 # The parent line must be the first non-comment line in the file
 # This line defines the product name and version
-parent mu2ebintools  v1_01_07
+parent mu2ebintools  v1_01_08
 #
 fcldir	-
 #
 product		version
-fhiclcpp	v4_05_01
-cetbuildtools	v5_09_01	-	only_for_build
+fhiclcpp	v4_06_03
+cetbuildtools	v6_01_00	-	only_for_build
 end_product_list
 
  
