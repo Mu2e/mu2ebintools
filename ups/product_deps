@@ -1,20 +1,20 @@
 # The parent line must be the first non-comment line in the file
 # This line defines the product name and version
-parent mu2ebintools  v1_01_09
+parent mu2ebintools  v1_01_10
 #
 fcldir	-
 #
 product		version
-fhiclcpp	v4_06_03
+fhiclcpp	v4_06_05
 cetbuildtools	v6_01_00	-	only_for_build
 end_product_list
 
  
 # Matrix of qualifiers versus dependent products
 qualifier	fhiclcpp	compiler	notes
-e14:debug	e14:debug	gcc
-e14:opt		e14:opt		gcc
-e14:prof 	e14:prof	gcc
+e15:debug	e15:debug	gcc
+e15:opt		e15:opt		gcc
+e15:prof 	e15:prof	gcc
 end_qualifier_list
 
 # Local Variables:
