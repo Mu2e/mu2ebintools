@@ -149,7 +149,7 @@ void printSize ( std::ostream& os, bool has, std::string name, strlist const& s 
 }
 
 // Helper for verbosity1 and verbosity2 printing.
-template <class T> 
+template <class T>
 void printInfo ( std::ostream& os, bool has, std::string name, T const& s ){
   if ( has ){
     if ( s.empty() ){
@@ -166,6 +166,7 @@ void printInfo ( std::ostream& os, bool has, std::string name, T const& s ){
   }
 }
 
+// All work is done in the c'tor
 FclSummary::FclSummary(  const fhicl::ParameterSet& pset ):
   _pset(pset),
   _reservedToArtPhysics{"analyzers","producers","filters","trigger_paths", "end_paths"},
@@ -187,17 +188,18 @@ FclSummary::FclSummary(  const fhicl::ParameterSet& pset ):
   _hasTrigger_paths = _pset.get_if_present<strlist>("physics.trigger_paths", _trigger_paths);
   _hasEnd_paths     = _pset.get_if_present<strlist>("physics.end_paths",     _end_paths);
 
-  getModuleInfo( _pset, "outputs", _outputs, _outputModuleInfo );
+  getModuleInfo( _pset, "outputs",           _outputs,   _outputModuleInfo   );
   getModuleInfo( _pset, "physics.producers", _producers, _producerModuleInfo );
   getModuleInfo( _pset, "physics.analyzers", _analyzers, _analyzerModuleInfo );
   getModuleInfo( _pset, "physics.filters",   _filters,   _filterModuleInfo   );
 
-  // Identify candidate path names from the identifiers in the physics parameter set.
+  // Select candidate path names from the names in the physics parameter set.
   // Fixme: extend to distinguish trigger and end paths????
   removeReservedNames( _physics, _reservedToArtPhysics, _path_candidates);
 
 }
 
+// Printout with no verbosity option specfied.
 void FclSummary::verbosity0( std::string const& filename, std::ostream& os ) const{
 
   os << "filename:      " << filename << std::endl;
@@ -215,6 +217,7 @@ void FclSummary::verbosity0( std::string const& filename, std::ostream& os ) con
 
 }
 
+// Printout for -v
 void FclSummary::verbosity1( std::string const& filename, std::ostream& os ) const{
 
   os << "filename:      " << filename << std::endl;
@@ -234,12 +237,14 @@ void FclSummary::verbosity1( std::string const& filename, std::ostream& os ) con
 
 }
 
+// Printout for -vv
 void FclSummary::verbosity2( std::string const& filename, std::ostream& os ) const{
 
   os << "filename:      " << filename << std::endl;
   os << "process name:  " << _process_name << std::endl;
   os << "source module: " << _source_module_type << std::endl;
-  printInfo( os, _hasOutputs, "outputs:       ", _outputModuleInfo );
+
+  printInfo( os, _hasOutputs,  "outputs:       ", _outputModuleInfo );
   printInfo( os, _hasServices, "services:      ", _services );
 
   printInfo ( os, _hasProducers,     "producers:     ", _producerModuleInfo );
@@ -248,8 +253,7 @@ void FclSummary::verbosity2( std::string const& filename, std::ostream& os ) con
   printInfo ( os, _hasTrigger_paths, "trigger_paths: ", _trigger_paths );
   printInfo ( os, _hasEnd_paths,     "end_paths:     ", _end_paths );
 
-  printInfo ( os, !_path_candidates.empty(),
-              "paths:         ", _path_candidates );
+  printInfo ( os, !_path_candidates.empty(), "paths:         ", _path_candidates );
 
 }
 
@@ -301,7 +305,4 @@ int main(int argc, const char* argv[]){
   }
 
   exit(0);
-}
-
-void verbosity0( const fhicl::ParameterSet& pset ){
 }
