@@ -2,9 +2,10 @@
 // Original author Rob Kutschke
 
 #include <iostream>
+#include <iomanip>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
 
 #include "fhiclcpp/intermediate_table.h"
 #include "fhiclcpp/parse.h"
@@ -27,12 +28,19 @@ constexpr char const* const empty      = "<present but empty>";
 struct ModuleInfo {
   std::string label;
   std::string module_type;
-  ModuleInfo( std::string const& l, std::string const& t):label(l),module_type(t){}
+  ModuleInfo( std::string const& l, std::string const& t):label(l),module_type(t){
+    maxlen_label = std::max( maxlen_label, label.size() );
+  }
+
+  // For use in formated printout: to align the "label : type" pairs on the colon.
+  static size_t maxlen_label;
 };
+
+size_t ModuleInfo::maxlen_label=0;
 
 inline std::ostream& operator<<(std::ostream& os,
                                 const ModuleInfo& id ){
-  os << "( " << id.label << ": " << id.module_type << " )";
+  os << std::setw(ModuleInfo::maxlen_label) << id.label << " : " << id.module_type;
   return os;
 }
 
