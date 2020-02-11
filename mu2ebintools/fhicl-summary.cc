@@ -14,7 +14,7 @@
 #include "cetlib/filepath_maker.h"
 
 std::string usage() {
-  return "Usage: fhicl-getpar [-v|-vv] file.fcl\n";
+  return "Usage: fhicl-summary [-v|-vv] file.fcl\n";
 }
 
 typedef std::vector<std::string> strlist;
