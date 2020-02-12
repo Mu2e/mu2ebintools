@@ -44,14 +44,48 @@ inline std::ostream& operator<<(std::ostream& os,
   return os;
 }
 
+// Information about each path.
+class PathInfo{
+
+public:
+
+  // Types of paths.
+  enum type { ambiguous, trigger, end };
+
+  PathInfo( std::string const& n,
+            strlist const&     m,
+            type               t ):name(n), module_labels(m), pathType(t){
+  }
+
+  std::string name;
+  strlist     module_labels;
+  type        pathType = ambiguous;
+
+  static std::string const& typeName( PathInfo::type t ){
+    static std::array<std::string,3> names { "ambiguous", "trigger", "end" };
+    return names.at(t);
+  }
+
+};
+
+inline std::ostream& operator<<(std::ostream& os,
+                                const PathInfo& info ){
+  os << info.name;
+  return os;
+}
+
+
 // The workhorse class: organizes information from the parameter set.
 class FclSummary{
 public:
+
   FclSummary(  const fhicl::ParameterSet& pset );
 
   void verbosity0( std::string const&, std::ostream& os ) const;
   void verbosity1( std::string const&, std::ostream& os ) const;
   void verbosity2( std::string const&, std::ostream& os ) const;
+
+  void classifyPaths();
 
 private:
   const fhicl::ParameterSet& _pset;
@@ -93,7 +127,14 @@ private:
   bool _hasEnd_paths = false;
   strlist _end_paths;
 
+  // All identifiers in the physics parameter set that are
+  // not on the reserved list and are, therefore, candidates
+  // being a path.
   strlist _path_candidates;
+
+  // Subsets of _path_candidates, sorted by trigger/end ambiguous.
+  std::array<std::vector<PathInfo>,3> _pathInfo;
+
 };
 
 // The following free functions are helpers used by FclSummary.
@@ -147,6 +188,40 @@ void removeReservedNames( strlist const& allNames,
   }
 }
 
+// Helper function for FclSummary::classifyPaths.
+bool foundIn( std::string const& name, std::vector<ModuleInfo> const& infos){
+  for ( auto const& i : infos ){
+    if ( i.label == name ){
+      return true;
+    }
+  }
+  return false;
+}
+
+// 4-input logical XOR: true if and only if exactly one of the inputs is true;
+// C++ does not have a logical XOR builtin; only a 2 argument bitwise XOR.
+bool logicalXOR ( bool b0, bool b1, bool b2, bool b3){
+  int n{0};
+  if ( b0 ) ++n;
+  if ( b1 ) ++n;
+  if ( b2 ) ++n;
+  if ( b3 ) ++n;
+  return (n==1);
+}
+
+// Classify a module based on what type of path it may be on: trigger path or end path.
+PathInfo::type classifyModule ( bool prod, bool filt, bool anal, bool outp){
+  bool isTrigger{false};
+  bool isEnd{false};
+  if ( logicalXOR( prod, filt, anal, outp ) ){
+    isTrigger = (prod || filt) ;
+    isEnd     = (anal || outp);
+    if ( isTrigger ) return PathInfo::trigger;
+    if ( isEnd     ) return PathInfo::end;
+  }
+  return PathInfo::ambiguous;
+}
+
 // Helper for verbosity0 printing.
 void printSize ( std::ostream& os, bool has, std::string name, strlist const& s ){
   if ( has ){
@@ -174,7 +249,7 @@ void printInfo ( std::ostream& os, bool has, std::string name, T const& s ){
   }
 }
 
-// All work is done in the c'tor
+// All work to collect information is done in the c'tor
 FclSummary::FclSummary(  const fhicl::ParameterSet& pset ):
   _pset(pset),
   _reservedToArtPhysics{"analyzers","producers","filters","trigger_paths", "end_paths"},
@@ -202,8 +277,10 @@ FclSummary::FclSummary(  const fhicl::ParameterSet& pset ):
   getModuleInfo( _pset, "physics.filters",   _filters,   _filterModuleInfo   );
 
   // Select candidate path names from the names in the physics parameter set.
-  // Fixme: extend to distinguish trigger and end paths????
   removeReservedNames( _physics, _reservedToArtPhysics, _path_candidates);
+
+  // Classify the candidate path names as either trigger paths, end paths or ambiguous.
+  classifyPaths();
 
 }
 
@@ -228,40 +305,42 @@ void FclSummary::verbosity0( std::string const& filename, std::ostream& os ) con
 // Printout for -v
 void FclSummary::verbosity1( std::string const& filename, std::ostream& os ) const{
 
-  os << "filename:      " << filename << std::endl;
-  os << "process name:  " << _process_name << std::endl;
-  os << "source module: " << _source_module_type << std::endl;
-  printInfo( os, _hasOutputs, "outputs:       ", _outputModuleInfo );
-  printInfo( os, _hasServices, "services:      ", _services );
+  os << "filename:        " << filename << std::endl;
+  os << "process name:    " << _process_name << std::endl;
+  os << "source module:   " << _source_module_type << std::endl;
+  printInfo( os, _hasOutputs, "outputs:         ", _outputModuleInfo );
+  printInfo( os, _hasServices, "services:        ", _services );
 
-  printSize ( os, _hasProducers,     "producers:     ", _producers );
-  printSize ( os, _hasAnalyzers,     "analyzers:     ", _analyzers );
-  printSize ( os, _hasFilters,       "filters:       ", _filters );
-  printSize ( os, _hasTrigger_paths, "trigger_paths: ", _trigger_paths );
-  printSize ( os, _hasEnd_paths,     "end_paths:     ", _end_paths );
+  printSize ( os, _hasProducers,     "producers:       ", _producers );
+  printSize ( os, _hasAnalyzers,     "analyzers:       ", _analyzers );
+  printSize ( os, _hasFilters,       "filters:         ", _filters );
+  printSize ( os, _hasTrigger_paths, "trigger_paths:   ", _trigger_paths );
+  printSize ( os, _hasEnd_paths,     "end_paths:       ", _end_paths );
 
-  printInfo ( os, !_path_candidates.empty(),
-              "paths:         ", _path_candidates );
-
+  printInfo ( os, !_pathInfo.at(PathInfo::trigger).empty(),   "trigger paths:   ", _pathInfo.at(PathInfo::trigger)   );
+  printInfo ( os, !_pathInfo.at(PathInfo::end).empty(),       "end paths:       ", _pathInfo.at(PathInfo::end)       );
+  printInfo ( os, !_pathInfo.at(PathInfo::ambiguous).empty(), "ambiguous paths: ", _pathInfo.at(PathInfo::ambiguous) );
 }
 
 // Printout for -vv
 void FclSummary::verbosity2( std::string const& filename, std::ostream& os ) const{
 
-  os << "filename:      " << filename << std::endl;
-  os << "process name:  " << _process_name << std::endl;
-  os << "source module: " << _source_module_type << std::endl;
+  os << "filename:        " << filename << std::endl;
+  os << "process name:    " << _process_name << std::endl;
+  os << "source module:   " << _source_module_type << std::endl;
 
-  printInfo( os, _hasOutputs,  "outputs:       ", _outputModuleInfo );
-  printInfo( os, _hasServices, "services:      ", _services );
+  printInfo( os, _hasOutputs,  "outputs:         ", _outputModuleInfo );
+  printInfo( os, _hasServices, "services:        ", _services );
 
-  printInfo ( os, _hasProducers,     "producers:     ", _producerModuleInfo );
-  printInfo ( os, _hasAnalyzers,     "analyzers:     ", _analyzerModuleInfo );
-  printInfo ( os, _hasFilters,       "filters:       ", _filterModuleInfo );
-  printInfo ( os, _hasTrigger_paths, "trigger_paths: ", _trigger_paths );
-  printInfo ( os, _hasEnd_paths,     "end_paths:     ", _end_paths );
+  printInfo ( os, _hasProducers,     "producers:       ", _producerModuleInfo );
+  printInfo ( os, _hasAnalyzers,     "analyzers:       ", _analyzerModuleInfo );
+  printInfo ( os, _hasFilters,       "filters:         ", _filterModuleInfo );
+  printInfo ( os, _hasTrigger_paths, "trigger_paths:   ", _trigger_paths );
+  printInfo ( os, _hasEnd_paths,     "end_paths:       ", _end_paths );
 
-  printInfo ( os, !_path_candidates.empty(), "paths:         ", _path_candidates );
+  printInfo ( os, !_pathInfo.at(PathInfo::trigger).empty(),   "trigger paths:   ", _pathInfo.at(PathInfo::trigger)   );
+  printInfo ( os, !_pathInfo.at(PathInfo::end).empty(),       "end paths:       ", _pathInfo.at(PathInfo::end)       );
+  printInfo ( os, !_pathInfo.at(PathInfo::ambiguous).empty(), "ambiguous paths: ", _pathInfo.at(PathInfo::ambiguous) );
 
 }
 
@@ -313,4 +392,41 @@ int main(int argc, const char* argv[]){
   }
 
   exit(0);
+}
+
+// Organize _path_candidates into 3 groups: trigger paths, end paths
+// and ambiguous paths.
+void FclSummary::classifyPaths() {
+
+  for ( auto const& pathName : _path_candidates ){
+    auto const& moduleLabels = _pset.get<strlist>("physics."+pathName);
+
+    // Classify each module label as elligible to be on a trigger path
+    // or on an end path and count the number of each.
+    std::array<int,3> moduleTypes{0, 0, 0};
+    for ( auto const& moduleLabel : moduleLabels ){
+      bool prod = foundIn( moduleLabel, _producerModuleInfo );
+      bool filt = foundIn( moduleLabel, _filterModuleInfo );
+      bool anal = foundIn( moduleLabel, _analyzerModuleInfo );
+      bool outp = foundIn( moduleLabel, _outputModuleInfo );
+      auto type  = classifyModule( prod, filt, anal, outp);
+      ++moduleTypes.at(type);
+    }
+
+    // Classify the path based on PathInfo::type of their modules.
+    PathInfo::type type{PathInfo::ambiguous};
+    if ( moduleTypes.at(PathInfo::ambiguous) == 0 &&
+         moduleTypes.at(PathInfo::trigger)    > 0 &&
+         moduleTypes.at(PathInfo::end)       == 0 ){
+      type = PathInfo::trigger;
+    } else if ( moduleTypes.at(PathInfo::ambiguous) == 0 &&
+                moduleTypes.at(PathInfo::trigger)   == 0 &&
+                moduleTypes.at(PathInfo::end)        > 0 ){
+      type = PathInfo::end;
+    }
+
+    // Save information for use by printing code.
+    _pathInfo.at(type).emplace_back( pathName, moduleLabels, type);
+
+  }
 }
