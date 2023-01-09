@@ -9,7 +9,6 @@ fhiclcpp	v4_12_02
 cetbuildtools	v7_17_01	-	only_for_build
 end_product_list
 
-
 # Matrix of qualifiers versus dependent products
 qualifier	fhiclcpp	compiler	notes
 e19:debug	e19:debug	gcc
