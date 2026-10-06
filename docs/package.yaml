@@ -1,0 +1,112 @@
+schema: mega-review/1
+package: mu2ebintools
+tier: A
+group: artdaq-data-path
+repo:
+  url: git@github.com:Mu2e/mu2ebintools.git
+  exists: true
+  issues_enabled: true
+doc_dir: docs
+summary: >
+  Two read-only FHiCL inspection command-line tools, fhicl-getpar and
+  fhicl-summary, built against fhiclcpp and cetlib as a cetbuildtools/UPS
+  product; no DAQ package calls them
+languages: [cpp, cmake]
+loc: 515
+
+runtime:
+  executables:
+    - name: fhicl-getpar
+      kind: cli
+      man_page: man/man1/fhicl-getpar.1
+    - name: fhicl-summary
+      kind: cli
+      man_page: man/man1/fhicl-summary.1
+    - name: ups/setup_for_development
+      kind: script
+      waiver: cetbuildtools boilerplate sourced to prepare a UPS build environment, not a user command; its use is documented in docs/INSTALL.md
+  services: []
+  ports: []
+  config_files: []
+  env_vars: [FHICL_FILE_PATH]
+
+interactions:
+  depends_on: []
+  depended_on_by: []
+  external: [fhiclcpp, cetlib, cetlib_except, cetbuildtools, ups]
+
+quality:
+  tests: {present: false, framework: none, count: 0}
+  ci: {present: false, workflows: []}
+  license: none
+  artifacts_clean: true
+
+findings:
+  - id: MBT-001
+    severity: S3
+    type: bug
+    title: "[fhicl-summary] default output gates the services count on physics.producers"
+    issue: pending
+    fingerprint: 7e542edc
+  - id: MBT-002
+    severity: S3
+    type: enhancement
+    title: "[build] build depends on cetbuildtools/UPS only and declares CMake 2.8; sources rely on transitive standard headers"
+    issue: pending
+    fingerprint: 471ebe74
+  - id: MBT-003
+    severity: S4
+    type: enhancement
+    title: "[cli] positional-only arguments and one exit status for every failure"
+    issue: pending
+    fingerprint: 0d39262c
+  - id: MBT-004
+    severity: S4
+    type: enhancement
+    title: "[hygiene] no tests, no CI, no LICENSE"
+    issue: pending
+    fingerprint: 8672d413
+  - id: MBT-005
+    severity: S4
+    type: documentation
+    title: "[scope] declare why mu2ebintools is a mu2edaq-main submodule: no DAQ package builds or calls it"
+    issue: pending
+    fingerprint: 99583ace
+
+notes:
+  method: >
+    Both sources (fhicl-getpar.cc 83 lines, fhicl-summary.cc 432 lines) read
+    in full. Not built or run: no fhiclcpp/cetlib/cetbuildtools/UPS on the
+    review host, and a scratch cmake configure was not permitted in this
+    session.
+  input_handling: >
+    Arguments are strictly positional (getpar argc==4, summary argc 2 or 3);
+    -h/--help only as argv[1], usage to stdout, exit 0. Every failure
+    (usage, file, parse, absent key, type mismatch, classification) is
+    caught as std::exception, printed to stderr and exits 1 (MBT-003).
+    The top-level .fcl is opened as given; includes resolve through
+    FHICL_FILE_PATH (cet::filepath_lookup_after1, fhicl-getpar.cc:39,
+    fhicl-summary.cc:366). fhicl-summary classifies paths in its
+    constructor (fhicl-summary.cc:283, :402), so a non-sequence entry under
+    physics fails every verbosity level.
+  group: >
+    group artdaq-data-path as assigned by the orchestrator. The tools operate
+    on art/FHiCL job configurations; there is no run-time link to any DAQ
+    package.
+  interactions: >
+    No package in mu2edaq-main references fhicl-getpar, fhicl-summary or
+    mu2ebintools outside .gitmodules, README.md and the bootstrap man page;
+    testing/common.sh pkg_list and pkg_cmake_dirs omit it, so the superproject
+    build never configures it.
+  readme: >
+    README.md created (contract section 2). The original plain README is kept
+    unchanged as the historical UPS/CVMFS notes.
+  dedup: >
+    gh issue list -R Mu2e/mu2ebintools --state all on 2026-10-06 returned no
+    issues; all 5 findings are new.
+  repo_visibility: >
+    Public, issues enabled, not archived, no licence (gh repo view,
+    2026-10-06). Default branch main.
+  loc: >
+    515 = C++ in mu2ebintools/*.cc. CMake (74 lines) and UPS files (132
+    lines) not counted.

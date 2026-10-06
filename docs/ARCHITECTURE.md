@@ -139,7 +139,7 @@ Staged in [`ISSUES-PENDING.md`](ISSUES-PENDING.md).
 | ID | Sev | Title |
 |---|---|---|
 | MBT-001 | S3 | `fhicl-summary` default output gates the services count on `physics.producers` |
-| MBT-002 | S3 | build needs retired cetbuildtools/UPS and declares CMake 2.8; sources rely on transitive standard headers |
+| MBT-002 | S3 | build depends on cetbuildtools/UPS only and declares CMake 2.8; sources rely on transitive standard headers |
 | MBT-003 | S4 | positional-only arguments and a single exit code for every failure |
-| MBT-004 | S4 | no tests, no CI, no LICENSE; `README` publishing recipe is SLF6-era |
-| MBT-005 | S4 | purpose in `mu2edaq-main` undeclared: no DAQ package builds or calls it |
+| MBT-004 | S4 | no tests, no CI, no LICENSE |
+| MBT-005 | S4 | declare why it is a `mu2edaq-main` submodule: no DAQ package builds or calls it |
