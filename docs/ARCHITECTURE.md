@@ -39,8 +39,8 @@ exactly that:
   outputs, services, modules and paths of an art job, and classifies each
   path as trigger, end or ambiguous.
 
-History: 40 commits from 2015-04 to 2020-11, almost all fhiclcpp/qualifier
-bumps, plus one 2023 commit when the repository moved to GitHub. It predates
+History: 40 commits, 2015-04 to 2020-11 plus one 2023-01 commit that tested
+the move to GitHub; almost all are fhiclcpp/qualifier bumps. It predates
 the DAQ superproject and is a submodule of `mu2edaq-main`
 (`.gitmodules:55-57`), but nothing in the DAQ tree builds or calls it:
 `testing/common.sh:23-50` (`pkg_list`) and `:102-113` (`pkg_cmake_dirs`)
