@@ -1,0 +1,184 @@
+.TH FHICL-SUMMARY 1 "2026-10-06" "mu2ebintools v1_01_21" "Mu2e DAQ Manual"
+.SH NAME
+fhicl-summary \- summarise the structure of an art job configuration
+.SH SYNOPSIS
+.B fhicl-summary
+.RB [ \-v | \-vv ]
+.I file.fcl
+.br
+.B fhicl-summary
+.RB { \-h | \-\-help }
+.SH DESCRIPTION
+.B fhicl-summary
+parses
+.I file.fcl
+with fhiclcpp, builds the complete
+.BR fhicl::ParameterSet ,
+and prints the parts of it that define an art job: the process name, the
+source module type, the output modules, the services, the producers,
+analyzers and filters, the
+.B trigger_paths
+and
+.B end_paths
+lists, and the paths.
+.PP
+A
+.I path
+is any name directly under
+.B physics
+other than the five reserved names
+.BR producers ,
+.BR analyzers ,
+.BR filters ,
+.B trigger_paths
+and
+.BR end_paths .
+Each path is classified from the module labels it lists:
+.IP \(bu 2
+a label found in exactly one of
+.BR physics.producers ,
+.BR physics.filters ,
+.B physics.analyzers
+or
+.B outputs
+is trigger-eligible (producer or filter) or end-eligible (analyzer or
+output); a label found in none or in several is ambiguous;
+.IP \(bu 2
+a path whose labels are all trigger-eligible is a
+.IR "trigger path" ,
+one whose labels are all end-eligible is an
+.IR "end path" ,
+and any other path, including an empty one, is
+.IR ambiguous .
+.PP
+Classification runs for every invocation, whatever the verbosity.
+A non-reserved entry under
+.B physics
+whose value is not a sequence (a table, for example) therefore makes the
+program fail (exit 1) even when only the default summary was asked for.
+.PP
+Absent tables are shown as
+.BR <not\ present> ;
+in the
+.B \-v
+and
+.B \-vv
+listings, a table or list that is present but empty is shown as
+.BR <present\ but\ empty> ,
+and a module without
+.B module_type
+is listed with type
+.BR <not\ present> .
+.SS Output levels
+.TP
+default
+One line each: file name, process name, source module type, and the
+number of outputs, services, producers, analyzers, filters,
+.B trigger_paths
+entries,
+.B end_paths
+entries and candidate paths.
+The services line is printed as
+.B <not\ present>
+whenever
+.B physics.producers
+is absent, and as a count otherwise; see BUGS.
+.TP
+.B \-v
+Outputs as
+.RI \(lq label " : " module_type \(rq,
+services by name, the producer, analyzer, filter,
+.B trigger_paths
+and
+.B end_paths
+counts, then the path names grouped as trigger, end and ambiguous.
+.TP
+.B \-vv
+As
+.BR \-v ,
+but producers, analyzers and filters are listed as
+.RI \(lq label " : " module_type \(rq
+and the
+.B trigger_paths
+and
+.B end_paths
+entries are listed.
+.SH OPTIONS
+.TP
+.B \-v
+Verbose listing.
+Must be the first of exactly two arguments.
+.TP
+.B \-vv
+More verbose listing.
+Must be the first of exactly two arguments.
+.TP
+.BR \-h ", " \-\-help
+Print the usage line to standard output and exit 0.
+Recognised only as the first argument.
+.PP
+With one argument, that argument is the file.
+With two, the first must be
+.B \-v
+or
+.BR \-vv ;
+.B fhicl-summary job.fcl \-v
+tries to open a file named
+.B \-v
+and fails.
+.SH FILES
+.TP
+.I file.fcl
+The top-level configuration, opened as given (relative to the current
+directory or absolute).
+Included files are looked up along
+.BR FHICL_FILE_PATH .
+.SH ENVIRONMENT
+.TP
+.B FHICL_FILE_PATH
+Colon-separated list of directories searched for files named in
+.B #include
+directives (the
+.B cet::filepath_lookup_after1
+policy).
+.SH EXIT STATUS
+.TP
+.B 0
+The summary was printed, or
+.B \-h
+was given.
+.TP
+.B 1
+Any error, with a message on standard error: wrong number of arguments or
+an unrecognised option (the usage line is appended), the file cannot be
+found or parsed, or a fhiclcpp lookup failed during classification.
+.SH EXAMPLES
+.RS
+.EX
+export FHICL_FILE_PATH=.:/path/to/fcl/tree
+fhicl-summary job.fcl
+fhicl-summary \-v job.fcl
+fhicl-summary \-vv job.fcl | less
+.EE
+.RE
+.SH BUGS
+At the default level the services count is guarded by the presence of
+.B physics.producers
+instead of
+.B services
+.RB ( fhicl-summary.cc:294 ).
+A configuration with services but no producers shows
+.B services:\ <not\ present>;
+one with producers but no services shows
+.BR "services: 0" .
+Use
+.B \-v
+for a correct services listing.
+.SH SEE ALSO
+.BR fhicl-getpar (1),
+.BR fhicl-dump (1)
+.SH AUTHOR
+Rob Kutschke (2020).
+Manual page written from
+.B mu2ebintools/fhicl-summary.cc
+for the Mu2e DAQ mega-review, 2026-10-06.

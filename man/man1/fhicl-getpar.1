@@ -1,0 +1,141 @@
+.TH FHICL-GETPAR 1 "2026-10-06" "mu2ebintools v1_01_21" "Mu2e DAQ Manual"
+.SH NAME
+fhicl-getpar \- print one parameter of a FHiCL configuration
+.SH SYNOPSIS
+.B fhicl-getpar
+.RB { \-\-string | \-\-int | \-\-strlist | \-\-keys }
+.I name
+.I file.fcl
+.br
+.B fhicl-getpar
+.RB { \-h | \-\-help }
+.SH DESCRIPTION
+.B fhicl-getpar
+parses
+.I file.fcl
+with fhiclcpp, builds the complete
+.B fhicl::ParameterSet
+(includes resolved, prolog dropped, references substituted) and prints the
+value of the fully qualified, dot-separated parameter
+.IR name ,
+for example
+.B physics.producers
+or
+.BR services.TFileService.fileName .
+It is intended for shell scripts that need one value from an art job
+configuration without running art.
+.PP
+The arguments are strictly positional: exactly three, in the order option,
+name, file.
+The type option decides how the value is decoded and printed:
+.TP
+.B \-\-string
+Decode as
+.B std::string
+and print it on one line.
+.TP
+.B \-\-int
+Decode as a C++
+.B int
+and print it on one line.
+A value that is not an integer, or does not fit in an
+.BR int ,
+is an error.
+.TP
+.B \-\-strlist
+Decode a sequence as a list of strings and print one element per line.
+.TP
+.B \-\-keys
+Decode a table and print the names of its immediate members, one per
+line, in the order returned by
+.BR fhicl::ParameterSet::get_names() .
+.PP
+There is no option for floating-point or boolean values; for those use
+.B \-\-string
+or
+.BR fhicl-dump (1).
+.PP
+.I file.fcl
+itself is opened as given, relative to the current directory or as an
+absolute path.
+Files it
+.BR #include s
+are looked up along
+.B FHICL_FILE_PATH
+(the
+.B cet::filepath_lookup_after1
+policy).
+.SH OPTIONS
+.TP
+.BR \-\-string ", " \-\-int ", " \-\-strlist ", " \-\-keys
+Value type, as above.
+Must be the first argument.
+.TP
+.BR \-h ", " \-\-help
+Print the usage line to standard output and exit 0.
+Recognised only as the first argument.
+.SH FILES
+.TP
+.I file.fcl
+The top-level configuration to parse.
+.SH ENVIRONMENT
+.TP
+.B FHICL_FILE_PATH
+Colon-separated list of directories searched for files named in
+.B #include
+directives.
+What happens when it is unset is determined by
+.B cet::search_path
+in the cetlib version the program is linked against; set it.
+.SH EXIT STATUS
+.TP
+.B 0
+The value was printed, or
+.B \-h
+was given.
+.TP
+.B 1
+Any error, with a message on standard error: wrong number of arguments
+or unknown option (the usage line is appended), the file cannot be found
+or parsed, the parameter is absent, or its value cannot be decoded as the
+requested type.
+.PP
+An absent parameter and an unreadable file both exit 1, so the status
+alone does not tell a script which happened.
+.SH EXAMPLES
+Print the process name and the producer labels of a job:
+.PP
+.RS
+.EX
+export FHICL_FILE_PATH=.:/path/to/fcl/tree
+fhicl-getpar \-\-string process_name job.fcl
+fhicl-getpar \-\-keys physics.producers job.fcl
+.EE
+.RE
+.PP
+Use a value in a script, falling back to a default when it cannot be read:
+.PP
+.RS
+.EX
+out=$(fhicl-getpar \-\-string services.TFileService.fileName job.fcl \e
+      2>/dev/null) || out=hist.root
+.EE
+.RE
+.PP
+List the trigger paths:
+.PP
+.RS
+.EX
+fhicl-getpar \-\-strlist physics.trigger_paths job.fcl
+.EE
+.RE
+.SH SEE ALSO
+.BR fhicl-summary (1),
+.BR fhicl-dump (1)
+.SH AUTHOR
+Andrei Gaponenko (2015), based on
+.B parsefhicl.cc
+by Rob Kutschke.
+Manual page written from
+.B mu2ebintools/fhicl-getpar.cc
+for the Mu2e DAQ mega-review, 2026-10-06.
